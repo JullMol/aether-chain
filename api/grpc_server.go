@@ -26,7 +26,10 @@ func (s *Server) SubmitData(ctx context.Context, req *pb.DataRequest) (*pb.DataR
 }
 
 func StartGRPC(manager *engine.ChainManager, port string) {
-	lis, _ := net.Listen("tcp", ":"+port)
+	lis, err := net.Listen("tcp", ":"+port)
+	if err != nil {
+		return
+	}
 	s := grpc.NewServer()
 	pb.RegisterAetherServiceServer(s, &Server{Manager: manager})
 	

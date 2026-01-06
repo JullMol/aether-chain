@@ -1,6 +1,6 @@
 module github.com/JullMol/aether-chain
 
-go 1.25.5
+go 1.24.6
 
 require (
 	github.com/edsrzf/mmap-go v1.2.0

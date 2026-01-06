@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/JullMol/aether-chain/core/vm"
@@ -52,8 +53,14 @@ func (cm *ChainManager) ListBlocks() []string {
 	defer cm.mu.Unlock()
 
 	var blocks []string
-	for i := 1; i <= cm.sstCount; i++ {
-		blocks = append(blocks, fmt.Sprintf("block_%03d.sst", i))
+	entries, err := os.ReadDir(cm.basePath)
+	if err != nil {
+		return blocks
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && len(entry.Name()) > 4 && entry.Name()[len(entry.Name())-4:] == ".sst" {
+			blocks = append(blocks, entry.Name())
+		}
 	}
 	return blocks
 }
