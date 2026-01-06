@@ -10,6 +10,8 @@ function App() {
   const [activeView, setActiveView] = useState('home');
   const [archData, setArchData] = useState(null);
   const [showTerminal, setShowTerminal] = useState(false);
+  const [showWriteModal, setShowWriteModal] = useState(false);
+  const [writeValue, setWriteValue] = useState('');
   const terminalRef = useRef(null);
 
   const loadBlocks = () => {
@@ -60,8 +62,8 @@ function App() {
       setTerminalOutput(prev => [...prev, '⏳ Flushing to SSTables...']);
       setTimeout(() => { loadBlocks(); setTerminalOutput(prev => [...prev, '✅ Done! New blocks created.']); }, 3000);
     } else if (action === 'write') {
-      await fetch('/api/write?value=demo-data-' + Date.now(), { method: 'POST' });
-      setTerminalOutput(prev => [...prev, '✅ Data written to Memtable']);
+      setShowWriteModal(true);
+      return;
     } else if (action === 'verify') {
       setTerminalOutput(prev => [...prev, '🔍 Verifying chain integrity...']);
       const data = await fetch('/api/verify').then(r => r.json());
@@ -270,6 +272,49 @@ function App() {
             {terminalOutput.map((line, i) => (
               <div key={i} className={line.startsWith('>') ? 'text-cyan-400' : line.startsWith('✅') ? 'text-emerald-400' : 'text-gray-300'}>{line}</div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Write Data Modal */}
+      {showWriteModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowWriteModal(false)}>
+          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold text-cyan-400">✏️ Write Data</h3>
+              <button onClick={() => setShowWriteModal(false)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">Enter any data to store in the blockchain. Data will be written to Memtable, then flushed to a Block when buffer is full.</p>
+            <input
+              type="text"
+              value={writeValue}
+              onChange={(e) => setWriteValue(e.target.value)}
+              placeholder="Enter your data here..."
+              className="w-full px-4 py-3 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowWriteModal(false)}
+                className="flex-1 px-4 py-3 rounded-xl bg-gray-800 text-gray-400 hover:bg-gray-700 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (!writeValue.trim()) return;
+                  setShowTerminal(true);
+                  setTerminalOutput(prev => [...prev, `> write "${writeValue}"`]);
+                  await fetch(`/api/write?value=${encodeURIComponent(writeValue)}`, { method: 'POST' });
+                  setTerminalOutput(prev => [...prev, `✅ "${writeValue}" written to Memtable`, '   Path: Write → Memtable → SSTable → Block']);
+                  setWriteValue('');
+                  setShowWriteModal(false);
+                }}
+                className="flex-1 px-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:opacity-90 transition-all"
+              >
+                Write to Chain
+              </button>
+            </div>
           </div>
         </div>
       )}
