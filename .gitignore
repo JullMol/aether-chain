@@ -1,0 +1,28 @@
+# Binaries
+/aetherd
+*.exe
+
+# Data directories
+data/
+data1/
+data2/
+data3/
+*.sst
+
+# Go
+vendor/
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

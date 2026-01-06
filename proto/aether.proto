@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package aether;
+option go_package = "github.com/JullMol/aether-chain/proto";
+
+service AetherService {
+    rpc SubmitData(DataRequest) returns (DataResponse);
+    rpc GetNodeStatus(Empty) returns (StatusResponse);
+}
+
+message DataRequest {
+    string key = 1;
+    bytes value = 2;
+}
+
+message DataResponse {
+    string block_hash = 1;
+    string status = 2;
+}
+
+message Empty {}
+
+message StatusResponse {
+    int32 peer_count = 1;
+    string last_block_hash = 2;
+    int32 total_blocks = 3;
+}
