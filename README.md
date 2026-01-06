@@ -1,113 +1,144 @@
 # Aether-Chain
 
-A high-performance blockchain and distributed data availability layer built in Go. Features P2P networking, gRPC/HTTP APIs, WebAssembly smart contract execution, and a real-time React dashboard.
+> A high-performance distributed data availability layer combining **LSM-Tree storage** with **blockchain immutability** and **P2P networking**.
 
-## Architecture
+[![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat&logo=go)](https://go.dev/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react)](https://react.dev/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?style=flat&logo=docker)](https://docker.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+## 🌟 Features
+
+- **LSM-Tree Storage** - Memory-efficient key-value storage with Skip-List memtable and SSTable persistence
+- **Blockchain Integrity** - SHA-256 hash chaining with Merkle Tree per block
+- **P2P Networking** - Decentralized node discovery via libp2p (mDNS + GossipSub)
+- **WASM Smart Contracts** - Sandboxed validation logic using Wazero runtime
+- **Real-time Dashboard** - Interactive block explorer with WebSocket live updates
+- **Multi-node Cluster** - Run 3-node testnet locally with Docker Compose
+
+## 🏗️ Architecture
 
 ```mermaid
 graph TB
-    subgraph Client Layer
+    subgraph "👤 Client Layer"
         Dashboard[React Dashboard]
-        GRPC[gRPC Client]
+        CLI[CLI Tool]
     end
 
-    subgraph API Layer
-        HTTP[HTTP Server :8080]
+    subgraph "🔌 API Layer"
+        HTTP[HTTP REST :8080]
         WS[WebSocket /ws]
-        GRPCS[gRPC Server :50051]
+        GRPC[gRPC :50051]
     end
 
-    subgraph Core Engine
+    subgraph "⚙️ Core Engine"
         CM[Chain Manager]
-        MT[Memtable]
-        SST[SSTable Storage]
+        MT[Memtable<br/>Skip-List]
+        SST[SSTable<br/>Disk Storage]
+        MK[Merkle Tree]
     end
 
-    subgraph P2P Network
+    subgraph "🌐 P2P Network"
         Node[libp2p Node :6001]
-        Gossip[PubSub Gossip]
-        Discovery[Peer Discovery]
+        Gossip[GossipSub PubSub]
+        MDNS[mDNS Discovery]
     end
 
-    subgraph Smart Contracts
-        VM[WASM Executor]
+    subgraph "📜 Smart Contracts"
+        VM[Wazero WASM Runtime]
     end
 
     Dashboard --> HTTP
     Dashboard --> WS
-    GRPC --> GRPCS
+    CLI --> GRPC
 
     HTTP --> CM
-    GRPCS --> CM
+    GRPC --> CM
     WS --> CM
 
     CM --> MT
-    MT --> SST
+    MT -->|Flush| SST
+    SST --> MK
     CM --> VM
 
     CM --> Gossip
-    Node --> Discovery
+    Node --> MDNS
     Gossip --> Node
 ```
 
-## Features
-
-- **LSM-Tree Storage Engine** - Memory-efficient key-value storage with SSTable persistence
-- **P2P Networking** - Decentralized peer discovery and block propagation via libp2p
-- **Dual API Support** - gRPC for high-performance clients, HTTP/WebSocket for web apps
-- **WASM Smart Contracts** - Execute validation logic via WebAssembly
-- **Real-time Dashboard** - Live block explorer with WebSocket updates
-- **Multi-node Docker Setup** - Run a local cluster with docker-compose
-
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 - Go 1.24+
 - Node.js 20+ (for dashboard)
-- Docker & Docker Compose (optional)
+- Docker & Docker Compose
+
+### Run with Docker (Recommended)
+
+```bash
+# Start 3-node cluster
+docker-compose up --build
+
+# Access dashboard
+open http://localhost:8081
+```
 
 ### Run Locally
 
 ```bash
-# Build the node
+# Build
 make build
 
-# Start the node
+# Start node
 ./aetherd start --port 6001 --data ./data
-
-# Or run with Docker
-make docker-up
 ```
 
-### Access Points
-| Service | URL |
-|---------|-----|
-| Dashboard | http://localhost:8080 |
-| HTTP API | http://localhost:8080/api |
-| WebSocket | ws://localhost:8080/ws |
-| gRPC | localhost:50051 |
+## 🖥️ Dashboard
 
-## API Endpoints
+The interactive dashboard lets you:
 
-### HTTP
-- `GET /api/status` - Node status
-- `GET /api/blocks` - List all blocks
+| Feature | Description |
+|---------|-------------|
+| **Generate Blocks** | Run benchmark to create blocks via LSM-Tree |
+| **Write Data** | Store custom data in memtable |
+| **Verify Chain** | Check blockchain integrity |
+| **View Peers** | See P2P network status |
+| **Block Explorer** | Browse all blocks with details |
+| **Architecture View** | Visualize system layers |
+
+## 🔌 API Endpoints
+
+### HTTP REST
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/status` | GET | Node status & metrics |
+| `/api/blocks` | GET | List all blocks |
+| `/api/bench` | POST | Run benchmark |
+| `/api/write?value=data` | POST | Write to memtable |
+| `/api/memtable` | GET | Memtable info |
+| `/api/peers` | GET | P2P peers |
+| `/api/merkle` | GET | Merkle tree structure |
+| `/api/verify` | GET | Verify chain integrity |
+| `/api/arch` | GET | Architecture info |
+
+### WebSocket
+- `ws://localhost:8080/ws` - Real-time block notifications
 
 ### gRPC
 - `SubmitData(key, value)` - Write data to chain
 
-## Tech Stack
+## 🛠️ Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Backend | Go 1.24 |
-| P2P | libp2p |
-| RPC | gRPC + Protobuf |
-| Smart Contracts | Wazero (WASM) |
-| Frontend | React + Vite + TailwindCSS |
-| Containerization | Docker |
+| Layer | Technology |
+|-------|------------|
+| **Language** | Go 1.24 |
+| **Storage** | LSM-Tree (Skip-List + SSTable + mmap) |
+| **Networking** | libp2p, gRPC, WebSocket |
+| **Smart Contracts** | Wazero (WebAssembly) |
+| **Frontend** | React 19, Vite, TailwindCSS |
+| **Infrastructure** | Docker, Docker Compose |
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 aether-chain/
@@ -120,9 +151,23 @@ aether-chain/
 ├── p2p/               # libp2p networking
 ├── proto/             # Protobuf definitions
 ├── storage/           # Virtual filesystem
-└── dashboard/         # React frontend
+├── dashboard/         # React frontend
+├── Dockerfile         # Multi-stage build
+└── docker-compose.yml # 3-node cluster config
 ```
 
-## License
+## 📝 How It Works
 
-MIT
+1. **Write** → Data enters Memtable (RAM, Skip-List)
+2. **Flush** → When full (~10KB), flush to SSTable (Disk)
+3. **Block** → SSTable becomes immutable block with hash chain
+4. **Verify** → Merkle Tree ensures data integrity
+5. **Propagate** → New blocks broadcast to peers via GossipSub
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE)
+
+---
+
+**Made with ❤️ by [JullMol](https://github.com/JullMol)**
